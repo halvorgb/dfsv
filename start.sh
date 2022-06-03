@@ -11,8 +11,8 @@ cp cfgs/${SV_TYPE}.cfg servers/base/defrag/dfsv/main.cfg
 
 cat << EOF >> servers/base/defrag/dfsv/main.cfg
   sets .admin-irc "$ADMIN_IRC"
-  sets .admin-discord "$ADMIN_DICOR"
-  sets .admin-mail "$ADMIN_MAI"
+  sets .admin-discord "$ADMIN_DISCORD"
+  sets .admin-mail "$ADMIN_MAIL"
   sets .admin-name "$ADMIN_NAME"
   sets .homepage "$SV_HOMEPAGE"
   sets .mapbase "$SV_MAPBASE"
