@@ -1,17 +1,29 @@
-FROM i386/ubuntu
+FROM alpine
 
-RUN dpkg --add-architecture i386
+# vim and bash for when executing into the container
+# gcompat is required to run oDFe.ded.x64 on alpine
+RUN apk add --update --no-cache \
+    vim \
+    unzip \
+    bash \
+    gcompat
 
-RUN apt-get update && \
-    apt-get install -y wget mysql-common:i386 libicu60:i386 unionfs-fuse unzip nano nfs-common
+# something like this for NFS, will probably us a fly.io volume instead of doing this
+# RUN apk add --update --no-cache nfs-utils openrc
+# RUN rc-update add nfsmount
+# RUN rc-service nfsmount start
+
+# NFS_SERVER=nfs-server.hiroom2.com
+# NFS_DIR=/srv/nfsshare
+# sudo mount -t nfs ${NFS_SERVER}:${NFS_DIR} /mnt
 
 WORKDIR /dfsv
 
 ARG BASE="/dfsv/servers/base"
 
-RUN mkdir -p maps data ${BASE}/baseq3 temp
-RUN mkdir -p ${BASE}/defrag/dfsv
-RUN mkdir -p /dfsv/nfs/maps
+RUN mkdir -p \
+    ${BASE}/baseq3 \
+    ${BASE}/defrag/dfsv
 
 RUN wget http://212.24.100.183/downloads/dfsv.tar.gz && \
     tar -xvzf dfsv.tar.gz && \
@@ -20,37 +32,30 @@ RUN wget http://212.24.100.183/downloads/dfsv.tar.gz && \
     rm dfsv.tar.gz && \
     rm -rf dfsv/
 
-RUN wget http://212.24.100.183/downloads/oDFe.ded && \
-    mv oDFe.ded ${BASE}/
 
+RUN wget https://github.com/JBustos22/oDFe/releases/download/latest/oDFe-linux-x86_64.zip && \
+    unzip -d odfe oDFe-linux-x86_64.zip && \
+    mv odfe/oDFe.ded.x64 ${BASE}/ && \
+    chmod +x /dfsv/servers/base/oDFe.ded.x64 && \
+    rm oDFe-linux-x86_64.zip && \
+    rm -rf odfe/
+
+# need newer version of wget for these recursive shennanigans
+RUN apk add --update --no-cache wget
 RUN wget --no-check-certificate $(wget --spider -r --no-parent --no-check-certificate https://q3defrag.org/files/defrag/ 2>&1 | grep -E "\-\-2" | grep "defrag_" | grep -v "beta" | cut -d' ' -f4 | sort | tail -n1) && \
     unzip -o defrag*.zip && \
     mv defrag/zz-* ${BASE}/defrag/ && \
-    rm -f defrag*.zip
+    rm -f defrag*.zip && \
+    rm -rf defrag/ && \
+    rm -rf q3defrag.org/
 
-RUN wget http://212.24.100.183/downloads/rs.tar.gz && \
-    tar -xvzf rs.tar.gz && \
-    mv defrag/modules ${BASE}/defrag/ && \
-    mv defrag/qagame* ${BASE}/defrag/qagamei386.so && \
-    rm rs.tar.gz
+COPY cfgs cfgs
+COPY dlmap.sh start.sh .
 
-RUN wget http://security.ubuntu.com/ubuntu/pool/main/m/mysql-5.7/libmysqlclient20_5.7.21-1ubuntu1_i386.deb && \
-    dpkg -i libmysqlclient20_5.7.21-1ubuntu1_i386.deb && \
-    rm libmysqlclient20_5.7.21-1ubuntu1_i386.deb
-
-RUN wget http://security.ubuntu.com/ubuntu/pool/main/libx/libxml2/libxml2_2.9.4+dfsg1-6.1ubuntu1.6_i386.deb && \
-    dpkg -i libxml2_2.9.4+dfsg1-6.1ubuntu1.6_i386.deb && \
-    rm libxml2_2.9.4+dfsg1-6.1ubuntu1.6_i386.deb
-
-RUN apt-get install -y
-
-RUN apt-get install -y --fix-missing
-
-COPY . .
-
+COPY defaultmaps/* ${BASE}/baseq3
 # get default maps
-RUN ./dlmap.sh st1 && \
-    ./dlmap.sh amt-freestyle6 && \
-    ./dlmap.sh ojdf-sa
+# RUN ./dlmap.sh st1 && \
+#    ./dlmap.sh amt-freestyle6 && \
+#    ./dlmap.sh ojdf-sa
 
 ENTRYPOINT ./start.sh
