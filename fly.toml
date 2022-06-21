@@ -1,0 +1,65 @@
+# fly.toml file generated for defragserver on 2022-06-01T13:18:07+02:00
+app = "defragserver"
+
+kill_signal = "SIGINT"
+kill_timeout = 5
+processes = []
+
+[build]
+
+[env]
+  ADMIN_NAME="hgb"
+  ADMIN_IRC=""
+  ADMIN_DISCORD=""
+  ADMIN_MAIL=""
+  SV_HOSTNAME=""  
+  SV_HOMEPAGE=""
+  SV_MAPBASE=""
+  SV_LOCATION=""
+
+  SV_PORT="27960"
+  COM_HUNKMEGS="256"
+
+  # Server privacy
+  SV_PRIVATE="1" # Make server password protected (1 to enable)
+
+  # cpm | vq3 | mixed | fastcaps | teamruns | freestyle 
+  SV_TYPE="vq3"
+
+  # full server name, examples... :)
+  # ^9h^1g^2b ^5STONKS^0&^5BONKS^3, or
+  # ^9h^1g^2b ^5STONKS ^7cpm^3, or
+  # ^9h^1g^2b ^5BONKS ^7vq3^3
+  # server_name=""
+
+  # Set to 1 to enable mdd. Note: requires a mysqlconnection.info file in the defrag folder to work
+  MDD_ENABLED="0"
+
+
+[experimental]
+  allowed_public_ports = []
+  auto_rollback = true
+
+[[services]]
+  internal_port = 27960
+  protocol = "udp"
+
+  [services.concurrency]
+    hard_limit = 200
+    soft_limit = 20
+    type = "connections"
+
+    [[services.ports]]
+      port = 27960
+
+[[services]]
+  internal_port = 27960
+  protocol = "tcp"
+
+  [services.concurrency]
+    hard_limit = 200
+    soft_limit = 20
+    type = "connections"
+
+    [[services.ports]]
+      port = 27960      
